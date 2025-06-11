@@ -11,6 +11,7 @@
 
         struct triangle trig;
         material mat;
+        material mask;
 
 
         printf("Started\n");
@@ -19,7 +20,7 @@
             return -1;
         }
         
-        window = glfwCreateWindow(800, 400, "New Window", NULL, NULL);
+        window = glfwCreateWindow(800, 400, "Sosal Application", NULL, NULL);
         glfwMakeContextCurrent(window);
 
         if (!gladLoadGLLoader( (GLADloadproc)glfwGetProcAddress ) ) {
@@ -27,11 +28,20 @@
             glfwTerminate();
             return -1;
         }
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        glClearColor(1.0f, 0.5f, 0.5f, 1.0f);
 
         uint32_t shader = make_shader("../src/shaders/vertex.txt", "../src/shaders/fragment.txt");
+
         init_triangle(&trig);
         mat = init_material("../images/Sosal.jpg");
+        mask = init_material("../images/mask.jpg");
+
+        glUseProgram(shader);
+        glUniform1i(glGetUniformLocation(shader, "material"), 0);
+        glUniform1i(glGetUniformLocation(shader, "mask"), 1);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
@@ -39,12 +49,17 @@
             glClear(GL_COLOR_BUFFER_BIT);
 
             glUseProgram(shader);
+
             draw_triangle(&trig);
-            use_material(&mat);
+            use_material(&mat, 0);
+            use_material(&mask, 1);
+            
             glfwSwapBuffers(window);
         }
 
         delete_triangle(&trig);
+        delete_material(&mat);
+        delete_material(&mask);
 
         glDeleteProgram(shader);
         glfwTerminate();

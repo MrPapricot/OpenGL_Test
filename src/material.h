@@ -8,4 +8,4 @@ material init_material(const char const *);
 
 void delete_material(material*);
 
-void use_material(material*);
+void use_material(material*, int32_t);

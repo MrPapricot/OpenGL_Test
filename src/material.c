@@ -22,7 +22,7 @@ material init_material(const char const * filename) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
+
     return self;
 }
 
@@ -30,6 +30,7 @@ void delete_material(material* self) {
     glDeleteTextures(1, &self->texture);
 }
 
-void use_material(material* self) {
+void use_material(material* self, int32_t unit) {
+    glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, self->texture);
 }
