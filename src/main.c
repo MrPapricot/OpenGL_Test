@@ -1,113 +1,117 @@
-#include "c_config.h"
-#include <glad/glad.h>
+    #include "c_config.h"
+    #include <glad/glad.h>
+    #include "material.h"
 
-int64_t make_module(const char*, uint32_t);
-int64_t make_shader(const char*, const char*);
+    int64_t make_module(const char*, uint32_t);
+    int64_t make_shader(const char*, const char*);
 
-int main() {
-    GLFWwindow* window;
-
-
-    struct triangle trig;
+    int main() {
+        GLFWwindow* window;
 
 
-    printf("Started\n");
-    if (!glfwInit()) {
-        printf("Error with glfw init\n");
-        return -1;
-    }
-     
-    window = glfwCreateWindow(800, 400, "New Window", NULL, NULL);
-    glfwMakeContextCurrent(window);
+        struct triangle trig;
+        material mat;
 
-    if (!gladLoadGLLoader( (GLADloadproc)glfwGetProcAddress ) ) {
-        printf("Hello\n");
-        glfwTerminate();
-        return -1;
-    }
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
-    uint32_t shader = make_shader("../src/shaders/vertex.txt", "../src/shaders/fragment.txt");
-    init_triangle(&trig);
-
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glUseProgram(shader);
-        draw_triangle(&trig);
-        glfwSwapBuffers(window);
-    }
-
-    delete_triangle(&trig);
-
-    glDeleteProgram(shader);
-    glfwTerminate();
-    return 0;
-}
-
-int64_t make_shader(const char const* vertex_filepath, const char const* fragment_filepath) {
-    uint32_t modules[2] = {make_module(vertex_filepath, GL_VERTEX_SHADER), make_module(fragment_filepath, GL_FRAGMENT_SHADER)};
-
-    uint32_t shader = glCreateProgram();
-    for (size_t i = 0; i < 2; i++) {
-        if (modules[i] == -1) {
+        printf("Started\n");
+        if (!glfwInit()) {
+            printf("Error with glfw init\n");
             return -1;
         }
-        glAttachShader(shader, modules[i]);
-    }
-    glLinkProgram(shader);
+        
+        window = glfwCreateWindow(800, 400, "New Window", NULL, NULL);
+        glfwMakeContextCurrent(window);
 
-    int32_t success;
-    glGetProgramiv(shader, GL_LINK_STATUS, &success);
-    if (!success) {
-        char errorLog[1024];
-        glGetProgramInfoLog(shader, 1024, NULL, errorLog);
-        printf("Link Error\n%s", errorLog);
-    }
-    for (size_t i = 0; i < 2; i++) {
-        glDeleteShader(modules[i]);
+        if (!gladLoadGLLoader( (GLADloadproc)glfwGetProcAddress ) ) {
+            printf("Hello\n");
+            glfwTerminate();
+            return -1;
+        }
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+
+        uint32_t shader = make_shader("../src/shaders/vertex.txt", "../src/shaders/fragment.txt");
+        init_triangle(&trig);
+        mat = init_material("../images/Sosal.jpg");
+
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            glUseProgram(shader);
+            draw_triangle(&trig);
+            use_material(&mat);
+            glfwSwapBuffers(window);
+        }
+
+        delete_triangle(&trig);
+
+        glDeleteProgram(shader);
+        glfwTerminate();
+        return 0;
     }
 
-    return shader;
-}
+    int64_t make_shader(const char const* vertex_filepath, const char const* fragment_filepath) {
+        uint32_t modules[2] = {make_module(vertex_filepath, GL_VERTEX_SHADER), make_module(fragment_filepath, GL_FRAGMENT_SHADER)};
 
+        uint32_t shader = glCreateProgram();
+        for (size_t i = 0; i < 2; i++) {
+            if (modules[i] == -1) {
+                return -1;
+            }
+            glAttachShader(shader, modules[i]);
+        }
+        glLinkProgram(shader);
 
-int64_t make_module(const char const* path, uint32_t module_type) {
-    FILE* file = fopen(path, "rb");
-    if (file == NULL) {
-        printf("Error opening the file [%s]\n", path);
-        return -1;
+        int32_t success;
+        glGetProgramiv(shader, GL_LINK_STATUS, &success);
+        if (!success) {
+            char errorLog[1024];
+            glGetProgramInfoLog(shader, 1024, NULL, errorLog);
+            printf("Link Error\n%s", errorLog);
+        }
+        for (size_t i = 0; i < 2; i++) {
+            glDeleteShader(modules[i]);
+        }
+
+        return shader;
     }
-    char* buffer;
-    fseek(file, 0, SEEK_END);
-    size_t size = ftell(file);
-    rewind(file);
-    buffer = (char*)malloc(size + 1);
-    if (buffer == NULL) {
-        printf("Unable to allocate enougth memory\n");
+
+
+    int64_t make_module(const char const* path, uint32_t module_type) {
+        FILE* file = fopen(path, "rb");
+        if (file == NULL) {
+            printf("Error opening the file [%s]\n", path);
+            return -1;
+        }
+        char* buffer;
+        fseek(file, 0, SEEK_END);
+        size_t size = ftell(file);
+        rewind(file);
+        buffer = (char*)malloc(size + 1);
+        if (buffer == NULL) {
+            printf("Unable to allocate enougth memory\n");
+            fclose(file);
+            return -1;
+        }
+        size_t bytes_read = fread(buffer, 1, size, file);
         fclose(file);
-        return -1;
-    }
-    size_t bytes_read = fread(buffer, 1, size, file);
-    fclose(file);
-    if (bytes_read != size) {
-        printf("Can't read file [%s]\n", path);
-        return -1;
-    }
-    buffer[size] = '\0';
-    uint32_t sharedModule = glCreateShader(module_type);
-    glShaderSource(sharedModule, 1, (const char* const*)&buffer, NULL);
-    glCompileShader(sharedModule);
+        if (bytes_read != size) {
+            printf("Can't read file [%s]\n", path);
+            return -1;
+        }
+        buffer[size] = '\0';
+        uint32_t sharedModule = glCreateShader(module_type);
+        glShaderSource(sharedModule, 1, (const char* const*)&buffer, NULL);
+        glCompileShader(sharedModule);
 
-    int32_t success;
-    glGetShaderiv(sharedModule, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char errorLog[1024];
-        glGetShaderInfoLog(sharedModule, 1024, NULL, errorLog);
-        printf("Compilation Error\n, %s", errorLog);
-    }
+        int32_t success;
+        glGetShaderiv(sharedModule, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            char errorLog[1024];
+            glGetShaderInfoLog(sharedModule, 1024, NULL, errorLog);
+            printf("Compilation Error\n, %s", errorLog);
+        }
 
-    return sharedModule;
-}
+        return sharedModule;
+    }

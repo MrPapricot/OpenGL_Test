@@ -20,6 +20,10 @@ add_executable(test
     src/glad.c
     src/c_config.h
     src/c_triangle.h
+    src/config.c
+    src/material.h
+    src/material.c
+    src/c_triangle.c
 )
 
 target_link_libraries(test glfw OpenGL::GL)
