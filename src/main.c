@@ -1,6 +1,7 @@
     #include "c_config.h"
     #include <glad/glad.h>
     #include "material.h"
+    #include "linear_algebra.h"
 
     int64_t make_module(const char*, uint32_t);
     int64_t make_shader(const char*, const char*);
@@ -39,6 +40,13 @@
         glUseProgram(shader);
         glUniform1i(glGetUniformLocation(shader, "material"), 0);
         glUniform1i(glGetUniformLocation(shader, "mask"), 1);
+
+
+        vec3 position = { 0.1f, +0.3f, 0.0f };
+        mat4 model = cretae_translation_matrix(position);
+
+        uint32_t model_location = glGetUniformLocation(shader, "model");
+        glUniformMatrix4fv(model_location, 1, GL_FALSE, model.entries);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

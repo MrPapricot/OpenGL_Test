@@ -24,6 +24,8 @@ add_executable(test
     src/material.h
     src/material.c
     src/c_triangle.c
+    src/linear_algebra.h
+    src/linear_algebra.c
 )
 
 target_link_libraries(test glfw OpenGL::GL)
