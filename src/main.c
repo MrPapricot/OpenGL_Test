@@ -42,17 +42,31 @@
         glUniform1i(glGetUniformLocation(shader, "mask"), 1);
 
 
-        vec3 position = { 0.1f, +0.3f, 0.0f };
-        mat4 model = cretae_translation_matrix(position);
+        vec3 position = { -0.2f, +0.4f, 0.0f };
+        mat4 model;
+
+        vec3 camera_pos = {-1.3f, 0.0f, 0.7f};
+        vec3 camera_target = {0.0f, 0.0f, 0.0f};
 
         uint32_t model_location = glGetUniformLocation(shader, "model");
-        glUniformMatrix4fv(model_location, 1, GL_FALSE, model.entries);
+        uint32_t view_location = glGetUniformLocation(shader, "view");
+        uint32_t projection_location = glGetUniformLocation(shader, "projection");
+        
+        mat4 projection = create_projectrion_matrix(
+            70.0f, 800.0f / 400.0f, 0.1f, 20.0f 
+        );
+        mat4 view = create_look_at(camera_pos, camera_target);
+
+        glUniformMatrix4fv(view_location, 1, GL_FALSE, view.entries);
+        glUniformMatrix4fv(projection_location, 1, GL_FALSE, projection.entries);   
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
+            model = create_rotation_overZ_matrix(20 * glfwGetTime());
+            glUniformMatrix4fv(model_location, 1, GL_FALSE, model.entries);
 
             glClear(GL_COLOR_BUFFER_BIT);
 
